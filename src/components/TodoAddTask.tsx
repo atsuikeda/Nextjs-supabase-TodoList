@@ -10,7 +10,6 @@ export default function TodoAddTask() {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (title === "") return;
-
     await addSupabaseTodo({ id: uuidv4(), title: title, completed: false });
     setTitle("");
   };
