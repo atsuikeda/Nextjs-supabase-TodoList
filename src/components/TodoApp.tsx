@@ -1,40 +1,49 @@
 "use client";
 
-import { addTodo } from "@/utils/supabaseFunction";
 import TodoList from "./TodoList";
-import { FormEvent, useRef, useState } from "react";
-import { v4 as uuidv4 } from "uuid";
+import TodoAddTask from "./TodoAddTask";
+import { useEffect, useState } from "react";
+import { deleteAllSupabaseTodo, getAllTodos } from "@/utils/supabaseFunction";
+import { Todo } from "@/types/TodoType";
 
 export default function TodoApp() {
-  const [title, setTitle] = useState<string>("");
-  const [completed, setCompleted] = useState<boolean>(false);
+  const [todos, setTodos] = useState<Todo[]>([]);
 
-  // const todoInputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    const getTodos = async () => {
+      const todos = await getAllTodos();
+      setTodos(todos as Todo[]);
+    };
+    getTodos();
+  }, []);
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    // const todoTitle = todoInputRef.current?.value;
-    if (title === "") {
-      return;
-    }
-    e.preventDefault();
-    await addTodo({ id: uuidv4(), title, completed });
+  const handleAllDelete = () => {
+    const isConfirm = window.confirm(
+      "選択済みのタスクを削除してもよろしいですか？"
+    );
+    if (!isConfirm) return;
+    deleteAllSupabaseTodo();
   };
 
   return (
-    <section className="text-center p-4 mb-2 text-2xl font-medium rounded-lg bg-gray-100 ">
-      <h3>TodoList</h3>
-      <form onSubmit={(e) => handleSubmit(e)}>
-        {/* <input type="text" className="mr-2 shadow-lg p-1" ref={todoInputRef} onChange={(e) => setTitle(e.target.value)} /> */}
-        <input
-          type="text"
-          className="mr-2 shadow-lg p-1"
-          onChange={(e) => setTitle(e.target.value)}
-        />
-        <button className="shadow-md border-2 p-1 rounded-lg bg-green-200">
-          AddTodo
+    <section className="text-center p-4 mb-2 font-medium rounded-lg bg-gray-100 ">
+      <h3 className="text-2xl">TodoList</h3>
+      <TodoAddTask />
+      <div>
+        <ul className="mx-auto ">
+          {todos.map((todo) => (
+            <TodoList key={todo.id} todo={todo} />
+          ))}
+        </ul>
+      </div>
+      <div>
+        <button
+          className="p-1 shadow-md border-2 rounded-lg bg-red-200 hover:opacity-60"
+          onClick={handleAllDelete}
+        >
+          選択したタスクを削除
         </button>
-      </form>
-      <TodoList />
+      </div>
     </section>
   );
 }

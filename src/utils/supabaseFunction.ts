@@ -11,9 +11,36 @@ export const getAllTodos = async () => {
   }
 };
 
-export const addTodo = async ({ id, title, completed }: Todo) => {
+export const addSupabaseTodo = async ({ id, title, completed }: Todo) => {
   try {
     await supabase.from("todo").insert({ id, title, completed });
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+export const deleteSupabaseTodo = async (todoId: string) => {
+  try {
+    await supabase.from("todo").delete().match({ id: todoId });
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+export const deleteAllSupabaseTodo = async () => {
+  try {
+    await supabase.from("todo").delete().match({ completed: true });
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+export const checkSupabaseTodo = async (todoId: string, newChecked: boolean) => {
+  try {
+    await supabase
+      .from("todo")
+      .update({ completed: newChecked })
+      .match({ id: todoId });
   } catch (error) {
     console.error(error);
   }
