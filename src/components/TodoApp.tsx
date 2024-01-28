@@ -1,9 +1,14 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 import TodoList from "./TodoList";
 import TodoAddTask from "./TodoAddTask";
-import { useEffect, useState } from "react";
-import { deleteAllSupabaseTodo, getAllTodos } from "@/utils/supabaseFunction";
+import TodoDeleteTask from "./TodoDeleteTask";
+
+import { supabase } from "@/utils/supabase";
+import { getAllTodos } from "@/utils/supabaseFunction";
+
 import { Todo } from "@/types/TodoType";
 
 export default function TodoApp() {
@@ -15,14 +20,40 @@ export default function TodoApp() {
       setTodos(todos as Todo[]);
     };
     getTodos();
+    fetchRealtimeTodo();
   }, []);
 
-  const handleAllDelete = () => {
-    const isConfirm = window.confirm(
-      "選択済みのタスクを削除してもよろしいですか？"
-    );
-    if (!isConfirm) return;
-    deleteAllSupabaseTodo();
+  const fetchRealtimeTodo = () => {
+    try {
+      supabase
+        .channel("table_postgres_changes")
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "todo",
+          },
+          (payload) => {
+            if (payload.eventType === "INSERT") {
+              const { id, title, completed } = payload.new;
+              setTodos((todos) => [...todos, { id, title, completed }]);
+            }
+            if (payload.eventType === "DELETE") {
+              setTodos((todos) =>
+                todos.filter((todo) => todo.id !== payload.old.id)
+              );
+            }
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.channel("table_postgres_changes").unsubscribe();
+      };
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   return (
@@ -36,14 +67,7 @@ export default function TodoApp() {
           ))}
         </ul>
       </div>
-      <div>
-        <button
-          className="p-1 shadow-md border-2 rounded-lg bg-red-200 hover:opacity-60"
-          onClick={handleAllDelete}
-        >
-          選択したタスクを削除
-        </button>
-      </div>
+      <TodoDeleteTask />
     </section>
   );
 }

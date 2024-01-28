@@ -45,3 +45,4 @@ export const checkSupabaseTodo = async (todoId: string, newChecked: boolean) => 
     console.error(error);
   }
 };
+

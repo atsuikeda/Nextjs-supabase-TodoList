@@ -20,6 +20,8 @@ export default function TodoList({ todo }: Props) {
   };
 
   const handleDelete = () => {
+    const isConfirm = window.confirm('削除してもよろしいですか？');
+    if (!isConfirm) return;
     deleteSupabaseTodo(todo.id);
   };
 
